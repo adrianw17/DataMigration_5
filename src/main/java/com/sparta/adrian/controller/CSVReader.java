@@ -20,7 +20,7 @@ public class CSVReader {
     private static final Map<String, EmployeeDTO> employeeRecordsBatch = new HashMap<>();
     private static final List<EmployeeDTO> employeeRecordsDuplicates = new ArrayList<>();
 
-    public static void read(String filePath, int numThreads, boolean isBatched) {
+    public static void read(String filePath, int numThreads) {
         String row;
         boolean isFirstLine = true;
         boolean isThreaded = numThreads >= 1;
@@ -36,7 +36,7 @@ public class CSVReader {
 
                 if (isThreaded) {
                     if (employeeRecordsBatch.size() > numRows / numThreads) {
-                       sendBatch(isBatched);
+                       batch();
                         while (threads.size() > 0) {
                             threads.removeIf(thread -> !thread.isAlive());
                         }
@@ -44,12 +44,12 @@ public class CSVReader {
                }
             }
             if (isThreaded) {
-                sendBatch(isBatched);
+                batch();
                 while (threads.size() > 0) {
                     threads.removeIf(thread -> !thread.isAlive());
                 }
           } else {
-              employeeDAO.insertIntoTable(employeeRecords, isBatched);
+              employeeDAO.insertIntoTable(employeeRecords);
             }
             bufferedReader.close();
             Logging.traceLog("File read successful");
@@ -59,11 +59,11 @@ public class CSVReader {
         }
     }
 
-    private static void sendBatch(boolean isBatched) {
+    private static void batch() {
         Object object = new Object();
         Runnable runnable = () -> {
             synchronized (object) {
-                employeeDAO.insertIntoTable(employeeRecordsBatch, isBatched);
+                employeeDAO.insertIntoTable(employeeRecordsBatch);
                 employeeRecordsBatch.clear();
             }
         };
@@ -76,8 +76,8 @@ public class CSVReader {
         String[] employeeRow = row.split(",");
         EmployeeDTO employeeDTO = new EmployeeDTO(employeeRow);
 
-        EmployeeDTO hasBeenPut = employeeRecords.putIfAbsent(employeeRow[0], employeeDTO);
-        if (hasBeenPut == null) {
+        EmployeeDTO add = employeeRecords.putIfAbsent(employeeRow[0], employeeDTO);
+        if (add == null) {
             employeeRecordsBatch.put(employeeRow[0], employeeDTO);
         } else {
             employeeRecordsDuplicates.add(employeeDTO);

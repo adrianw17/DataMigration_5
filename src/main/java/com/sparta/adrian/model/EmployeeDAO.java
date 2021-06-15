@@ -100,25 +100,25 @@ public class EmployeeDAO {
         preparedStatement.close();
     }
 
-    public void insertIntoTable(Map<String, EmployeeDTO> employeeRecords, boolean isBatched) {
+    public void insertIntoTable(Map<String, EmployeeDTO> employeeRecords) {
         this.employeeRecords = employeeRecords;
-        this.isBatched = isBatched;
+        //this.isBatched = isBatched;
 
         try {
             if (connection == null || connection.isClosed()) {
                 connectToDatabase();
             }
-            if (isBatched) {
+   
                 connection.setAutoCommit(false);
-            }
+
             PreparedStatement preparedStatement = connection.prepareStatement(INSERT_INTO);
             for (EmployeeDTO employee : this.employeeRecords.values()) {
                 insertIntoQuery(employee, preparedStatement);
             }
-            if (isBatched) {
+
                 preparedStatement.executeBatch();
                 connection.commit();
-            }
+
             preparedStatement.close();
             Logging.traceLog("Data successfully inserted into table");
         } catch (SQLException e) {
