@@ -102,22 +102,17 @@ public class EmployeeDAO {
 
     public void insertIntoTable(Map<String, EmployeeDTO> employeeRecords) {
         this.employeeRecords = employeeRecords;
-        //this.isBatched = isBatched;
-
         try {
             if (connection == null || connection.isClosed()) {
                 connectToDatabase();
             }
-   
-                connection.setAutoCommit(false);
-
+            connection.setAutoCommit(false);
             PreparedStatement preparedStatement = connection.prepareStatement(INSERT_INTO);
             for (EmployeeDTO employee : this.employeeRecords.values()) {
                 insertIntoQuery(employee, preparedStatement);
             }
-
-                preparedStatement.executeBatch();
-                connection.commit();
+            preparedStatement.executeBatch();
+            connection.commit();
 
             preparedStatement.close();
             Logging.traceLog("Data successfully inserted into table");
@@ -141,10 +136,9 @@ public class EmployeeDAO {
         preparedStatement.setDate(9, employee.getDateOfJoining());
         preparedStatement.setInt(10, employee.getSalary());
 
-        if (isBatched) {
-            preparedStatement.addBatch();
-        } else {
-            preparedStatement.executeUpdate();
-        }
+
+        preparedStatement.addBatch();
+        //preparedStatement.executeUpdate();
+
     }
 }
